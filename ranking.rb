@@ -39,33 +39,40 @@
 
 
 class User 
-		attr_accessor :rank, :progress
-
-	def initialize
-		@rank, @progress = -8, 0	
-	end
-
-	def add_progress(number)
-		self.progress+=number 
-		add_rank(self.progress/100) 
-		self.progress = self.progress % 100
-	end
-
-	def add_rank (number)
-		number += 1 if number >= -self.rank
-		self.rank += number
-		self.rank = 8 if self.rank > 8
-	end
-
-	def inc_progress activity_rank
-		scores = {0 => 3, -1 => 1}
-		diff =  activity_rank*self.rank>0 ? activity_rank - self.rank : activity_rank - self.rank - 1
-		#diff =  activity_rank - self.rank
-		return if diff < -1
-		self.add_progress(scores[diff] || diff*diff*10)
-	end
-
-
+  RANKS = (-8..-1).to_a + (1..8).to_a
+  attr_accessor :progress
+  def initialize 
+    @i = 0
+    @progress = 0
+  end
+  
+  def rank
+    RANKS[@i]
+  end
+  
+  def inc_progress qRank
+    raise "Value outside range" unless RANKS.include? qRank
+    diff = difference(self.rank, qRank)
+    self.progress += score(diff)
+    update
+  end
+  
+  def difference(user, question)
+    RANKS.index(question) - RANKS.index(user)
+  end
+  
+  def score difference
+    poss = {0 => 3, -1 => 1}
+    return 0 if difference < -1
+    poss[difference] || (difference**2) * 10
+  end
+  
+  def update
+    return if @i == RANKS.size || @progress <= 100
+    @progress -= 100
+    @i += 1
+    update
+  end
 end
 
 class Activity
